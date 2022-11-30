@@ -1,11 +1,13 @@
 
 ---
-title: "PM566 Final Project"
+title: "PM566 Final Project: Correlation of Vaccine Hesitancy with COVID-19 Deaths and Cases"
 author: "Tzu Yu Huang"
-output: 
-    html_document:
-        toc: TRUE
-        toc_float: TRUE
+output:
+  pdf_document: 
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
 ---
 
 This is my PM566 Final Project website.
@@ -90,7 +92,7 @@ Description <- c("Geographic Area", "April 1, 2020 Estimates Base", "2020 Popula
 
 ## Estimated state vaccine hesitancy level
 
-The hesitancy level  
+The state vaccine hesitancy level is estimated by calculating the weighted average of the county hesitancy level, with population information from the third dataset as weight.   
 
 ```{r , message=FALSE, echo=FALSE, warning=FALSE}
 hes$estimated_hesitant <- as.numeric(hes$estimated_hesitant)
@@ -158,6 +160,8 @@ state_mer <-  date_mer[ date_mer$state %in% hes$state_code]
 
 # Results
 
+First, we look at the distribution of estimated hesitancy level for each state.
+
 ```{r, message=FALSE, echo=FALSE, warning=FALSE}
 # Create hover text
 state_mer$hover <- with(state_mer, paste(state.y, state, '<br>', "State level hesitancy: ", state_hes, '<br>', "Cases: ", tot_cases,'<br>', "Deaths: ", tot_death))
@@ -179,7 +183,7 @@ fig <- plot_geo(state_mer, locationmode = 'USA-states') %>%
   )
 fig <- fig %>% colorbar(title = "State level hesitancy", limits = c(0,0.25))
 fig <- fig %>% layout(
-    title = paste('state level hesitancy', '<br>(Hover for value)'),
+    title = paste('State level hesitancy', '<br>(Hover for value)'),
     geo = set_map_details
   )
 fig
@@ -191,9 +195,15 @@ state_mer$tot_cases <- as.numeric(state_mer$tot_cases)
 state_mer$tot_death <- as.numeric(state_mer$tot_death)
 
 merge = merge[order(merge$state, merge$submission_date),]
-caseline <- plot_ly(merge, x = ~submission_date, y = ~tot_cases/state_pop, color = ~state, type = "scatter", mode = "lines")
-deathline <- plot_ly(merge, x = ~submission_date, y = ~tot_death/state_pop, color = ~state, type = "scatter", mode = "lines")
+
+caseline <- plot_ly(merge, x = ~submission_date, y = ~tot_cases/state_pop, color = ~state, type = "scatter", mode = "lines") %>%
+  layout(title = "Population-normalized COVID-19 cases over time", yaxis = list(title = "Cases per person"), xaxis = list(title = "Submission date"))
+
+deathline <- plot_ly(merge, x = ~submission_date, y = ~tot_death/state_pop, color = ~state, type = "scatter", mode = "lines") %>%
+  layout(title = "Population-normalized COVID-19 deaths over time", yaxis = list(title = "Deaths per person"), xaxis = list(title = "Submission"),hovermode = "compare")
 ```
+
+Next, we look at the Population-normalized COVID-19 deaths/cases over time.
 
 ## {.tabset}
 
@@ -211,90 +221,17 @@ deathline
 
 ## {-}
 
+Third, we examine the relationship between total cases, total deaths, and estimated state hesitancy level.
+
 ```{r, message=FALSE, echo=FALSE, warning=FALSE}
 state_mer %>% 
   plot_ly(x = ~tot_cases/state_pop, y = ~tot_death/state_pop, 
           type = 'scatter', mode = 'markers', color = ~state.y,
-          size = ~state_hes, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5))
-```
-
-# Run data 
-
-```{r , message=FALSE, echo=FALSE, warning=FALSE}
-
-library(data.table)
-library(tidyverse)
-library(dplyr)
-library(plotly)
-library(DT)
-library(knitr)
-
-# Initialize code chunk options
-
-opts_chunk$set(
-  warning = FALSE,
-  message = FALSE,
-  eval=TRUE,
-  echo = TRUE,
-  cache = FALSE,
-  fig.width = 7, 
-  fig.align = 'center',
-  fig.asp = 0.618,
-  out.width = "700px")
+          size = ~state_hes, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5)) %>%
+    layout(title = "", yaxis = list(title = "Total deaths per person"), xaxis = list(title = "Total cases per person"),hovermode = "compare")
 ```
 
 
-```{r}
-
-```
-
-
-```{r}
-source("process_COVID_data.R")
-p1_scatter <- cv_states_today %>% 
-  plot_ly(x = ~pop_density, y = ~deathsper100k,
-          type = 'scatter', mode = 'markers', color = ~state,
-          size = ~population, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5),
-          hoverinfo = 'text',
-          text = ~paste( paste(state, ":", sep=""), paste(" Cases per 100k: ", per100k, sep="") , paste(" Deaths per 100k: ",
-                        deathsper100k, sep=""), sep = "<br>")) %>%
-  layout(title = "Population-normalized COVID-19 deaths vs. population density",
-                  yaxis = list(title = "Deaths per 100k"), xaxis = list(title = "Population Density"),
-         hovermode = "compare")
-
-# filter out "District of Columbia"
-cv_states_today_scatter <- cv_states_today %>% filter(state!="District of Columbia")
-
-p2_scatter <- cv_states_today_scatter %>% 
-  plot_ly(x = ~pop_density, y = ~deathsper100k,
-          type = 'scatter', mode = 'markers', color = ~state,
-          size = ~population, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5),
-          hoverinfo = 'text',
-          text = ~paste( paste(state, ":", sep=""), paste(" Cases per 100k: ", per100k, sep="") , paste(" Deaths per 100k: ",
-                        deathsper100k, sep=""), sep = "<br>")) %>%
-  layout(title = "Population-normalized COVID-19 deaths vs. population density",
-                  yaxis = list(title = "Deaths per 100k"), xaxis = list(title = "Population Density"),
-         hovermode = "compare")
-```
-
-
-## Showcasing  {.tabset}
-
-### Tab 1
-
-```{r echo=FALSE}
-p1_scatter
-```
-
-### Tab 2
-
-```{r echo=FALSE}
-p2_scatter
-```
-
-## {-}
-
-1.
 
 
 
