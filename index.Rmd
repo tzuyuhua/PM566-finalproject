@@ -12,6 +12,9 @@ output:
 
 This is my PM566 Final Project website.
 
+You can download the pdf version here.
+https://github.com/tzuyuhua/PM566-finalproject/blob/main/index.pdf
+
 <br>
 
 ```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
