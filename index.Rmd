@@ -278,7 +278,7 @@ p2_scatter <- cv_states_today_scatter %>%
 ```
 
 
-## Showcasing plots {.tabset}
+## Showcasing  {.tabset}
 
 ### Tab 1
 
