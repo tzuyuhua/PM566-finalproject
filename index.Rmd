@@ -12,9 +12,215 @@ This is my PM566 Final Project website.
 
 <br>
 
+```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+library(webshot)
+library(lubridate)
+library(tidyverse)
+library(tidyr)
+library(data.table)
+library(plotly)
+library(leaflet)
+library(readxl)
+library(RSocrata)
+```
+
+# Introduction
+
+Vaccine hesitancy, which is the reluctance or refusal to vaccinate despite the availability of vaccines,  has been proposed by the World Health Organization (WHO) as one of the ten threats to global health in 2019 https://www.who.int/news-room/spotlight/ten-threats-to-global-health-in-2019, even before the global pandemic of COVID-19.
+
+Vaccine is currently one of the most cost-effective ways of preventing disease outbreak and reducing disease consequence, and consequently disease's impact on economic. As of 2019, 2-3 million deaths a year are prevented by vaccination. If global coverage of vaccinations is improved , an estimated 1.5 million of death could be further avoided.
+
+As for the reason of vaccines hesitancy are complex, could be a result of numerous factors including lack of education, knowledge of how vacines are produce, distrust of government or authorities, or even just fear of needles. Its existence dates back the time vaccines were invented, however, it is only recently that it started to resurface to the discussion of mainstream media. 
+
+After the global outbreak of COVID-19 and the invention of COVID-19 vaccines, vaccine hesitancy plays an even more important role than before.  We can observe vaccines being not just a measure of disease prevention, but also a mean of politics, yet we can also see a subset of population refused to get vaccinated even with the resources at hand.
+
+This report is not to discuss the cause of vaccine hesitancy or the legitimacy of the claims by certain "anti-vaccinationism", but to see if vaccine hesitancy actually impacts the death and case number of COVID-19 on a state level in the US.  
+
+# Methods
+
+## Datasets
+
+A total of 3 datasets will be used in this project. The first two are from US Center for Disease Control and Prevention, and the third one are from United States Census Bureau (an official website of the United State Government).
+
+1. The fisrt dataset is “Vaccine Hesitancy for COVID-19: County and local estimates” from https://data.cdc.gov/Vaccinations/Vaccine-Hesitancy-for-COVID-19-County-and-local-es/q9mh-h2tw
+
+```{r, cache=TRUE, message=FALSE, echo=FALSE, warning=FALSE}
+ori_hes <- read.socrata(
+  "https://data.cdc.gov/resource/q9mh-h2tw.json",
+  app_token = "trg1fGPbmeJk0ZrQSlXmQMTBV",
+  email     = "tzuyuhua@usc.edu",
+  password  = "CodingCary0130"
+)
+
+hes <- as.data.table(ori_hes)
+```
+
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+hes$state_boundary.coordinates <- NULL
+hes$county_boundary.coordinates <- NULL
+```
+
+2. The second dataset is "United States COVID-19 Cases and Deaths by State over Time" from https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36
+
+```{r, cache=TRUE, message=FALSE, echo=FALSE, warning=FALSE}
+death <- read.socrata(
+  "https://data.cdc.gov/resource/9mfq-cb36.json",
+  app_token = "Sc1lehIxeCtFlCTmvmYgobCJD",
+  email     = "tzuyuhua@usc.edu",
+  password  = "CodingCary0130"
+)
+
+death <- as.data.table(death)
+
+```
+
+
+3. And for the comparison between states summary statistics to be reasonable and effective, I need the population data of different places. "County Population Totals: 2020-2021" from https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
+
+
+```{r , message=FALSE, echo=FALSE, warning=FALSE}
+county_pop <- read_excel("co-est2021-pop.xlsx", range = "A6:D3149", col_names = FALSE)
+colnames(county_pop) <- c("county_name", "April2020", "Jul2020", "July2021")
+
+Variable <-c("county_name", "April2020", "Jul2020", "July2021")
+
+Description <- c("Geographic Area", "April 1, 2020 Estimates Base", "2020 Population Estimate (as of July 1)", "2021 Population Estimate (as of July 1)")
+```
+
+## Estimated state vaccine hesitancy level
+
+The hesitancy level  
+
+```{r , message=FALSE, echo=FALSE, warning=FALSE}
+hes$estimated_hesitant <- as.numeric(hes$estimated_hesitant)
+hes$estimated_hesitant_or_unsure <- as.numeric(hes$estimated_hesitant_or_unsure)
+hes$estimated_strongly_hesitant <- as.numeric(hes$estimated_strongly_hesitant)
+hes$social_vulnerability_index <- as.numeric(hes$social_vulnerability_index)
+
+death$tot_cases <- as.numeric(death$tot_cases)
+death$tot_death <- as.numeric(death$tot_death)
+county_pop$county_name <- gsub("\\.","", county_pop$county_name)
+county_pop$county_name <- gsub("\\,","", county_pop$county_name)
+hes$county_name <- gsub("\\,","", hes$county_name)
+hes$county_name <- gsub("\\.","", hes$county_name)
+county_pop <- as.data.table(county_pop)
+
+hes <- 
+  merge(
+  # Data
+  x     = hes,      
+  y     = county_pop[, .(county_name, July2021)], 
+  # List of variables to match
+  by.x  = "county_name",
+  by.y  = "county_name", 
+  # Which obs to keep?
+  all.x = TRUE,      
+  all.y = FALSE
+  )
+
+hes[, social_vulnerability_index := fcoalesce(social_vulnerability_index, mean(social_vulnerability_index, na.rm = TRUE)),
+    by = .(state)]
+
+hes[ , state_pop  := sum(July2021), by = .(state_code)]
+hes[ , state_hes      := sum(estimated_hesitant*July2021)/state_pop , by = .(state_code)]
+hes[ , state_hes_uns  := sum(estimated_hesitant_or_unsure*July2021)/state_pop, by = .(state_code)]
+hes[ , state_stro_hes := sum(estimated_strongly_hesitant*July2021)/state_pop, by = .(state_code)]
+hes[ , SVI := sum(social_vulnerability_index*July2021)/state_pop, by = .(state_code)]
+
+hes <- hes[, state_SVI_cat := fifelse( SVI <= 0.19, "Very Low", 
+                        fifelse( SVI <= 0.39, "Low",
+                        fifelse( SVI <= 0.59, "Moderate",
+                        fifelse( SVI <= 0.79, "High",
+                       "Very High"))))
+ ]
+
+merge <- 
+  merge(
+  # Data
+  x     = death,      
+  y     = unique(hes[, .(state, state_code, state_hes, state_hes_uns, state_stro_hes, SVI, state_SVI_cat, state_pop)]), 
+  # List of variables to match
+  by.x  = "state",
+  by.y  = "state_code", 
+  # Which obs to keep?
+  all.x = TRUE,      
+  all.y = FALSE
+  )
+
+merge <- as.data.table(merge)
+
+merge[ , max.date      := max(submission_date), by = .(state)]
+date_mer <- merge[merge$max.date == merge$submission_date, ]
+
+state_mer <-  date_mer[ date_mer$state %in% hes$state_code]
+```
+
+# Results
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+# Create hover text
+state_mer$hover <- with(state_mer, paste(state.y, state, '<br>', "State level hesitancy: ", state_hes, '<br>', "Cases: ", tot_cases,'<br>', "Deaths: ", tot_death))
+
+# Set up mapping details
+set_map_details <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+
+# Create the map
+fig <- plot_geo(state_mer, locationmode = 'USA-states') %>% 
+  add_trace(
+    z = ~state_hes, text = ~hover, locations = ~state,
+    color = ~state_hes, colors = 'Purples'
+  )
+fig <- fig %>% colorbar(title = "State level hesitancy", limits = c(0,0.25))
+fig <- fig %>% layout(
+    title = paste('state level hesitancy', '<br>(Hover for value)'),
+    geo = set_map_details
+  )
+fig
+```
+
+
+```{r , message=FALSE, echo=FALSE, warning=FALSE}
+state_mer$tot_cases <- as.numeric(state_mer$tot_cases)
+state_mer$tot_death <- as.numeric(state_mer$tot_death)
+
+merge = merge[order(merge$state, merge$submission_date),]
+caseline <- plot_ly(merge, x = ~submission_date, y = ~tot_cases/state_pop, color = ~state, type = "scatter", mode = "lines")
+deathline <- plot_ly(merge, x = ~submission_date, y = ~tot_death/state_pop, color = ~state, type = "scatter", mode = "lines")
+```
+
+## {.tabset}
+
+### Tab 1
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+caseline 
+```
+
+### Tab 2
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+deathline
+```
+
+## {-}
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+state_mer %>% 
+  plot_ly(x = ~tot_cases/state_pop, y = ~tot_death/state_pop, 
+          type = 'scatter', mode = 'markers', color = ~state.y,
+          size = ~state_hes, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5))
+```
+
 # Run data 
 
-```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+```{r , message=FALSE, echo=FALSE, warning=FALSE}
 
 library(data.table)
 library(tidyverse)
@@ -35,6 +241,10 @@ opts_chunk$set(
   fig.align = 'center',
   fig.asp = 0.618,
   out.width = "700px")
+```
+
+
+```{r}
 
 ```
 
