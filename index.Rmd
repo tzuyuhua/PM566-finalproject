@@ -240,8 +240,7 @@ state_mer %>%
 
 # Conclusion
 
-Overall, COVID-19 vaccine hesitancy does seem to be correlated with COVID-19 cases and deaths, however, more confounding variables (etc, age, masks or population density) should be included to better understand the relationship. 
-
+Overall, COVID-19 vaccine hesitancy does seem to be correlated with COVID-19 cases and deaths, however, more confounding variables (etc, age, masks or population density) should be included to better understand the relationship, and better explain the variability in data.
 
 
 
