@@ -163,7 +163,7 @@ state_mer <-  date_mer[ date_mer$state %in% hes$state_code]
 
 # Results
 
-First, we look at the distribution of estimated hesitancy level for each state.
+First, we look at the distribution of estimated hesitancy level for each state. It seems that Montana, Wyoming, Alaska, Arkansas are the few states with the higher estimated state vaccine hesitancy level among all the states within the US (Figure 1).
 
 ```{r, message=FALSE, echo=FALSE, warning=FALSE}
 # Create hover text
@@ -186,7 +186,7 @@ fig <- plot_geo(state_mer, locationmode = 'USA-states') %>%
   )
 fig <- fig %>% colorbar(title = "State level hesitancy", limits = c(0,0.25))
 fig <- fig %>% layout(
-    title = paste('State level hesitancy', '<br>(Hover for value)'),
+    title = paste('Figure 1. State level hesitancy', '<br>(Hover for value)'),
     geo = set_map_details
   )
 fig
@@ -200,13 +200,15 @@ state_mer$tot_death <- as.numeric(state_mer$tot_death)
 merge = merge[order(merge$state, merge$submission_date),]
 
 caseline <- plot_ly(merge, x = ~submission_date, y = ~tot_cases/state_pop, color = ~state, type = "scatter", mode = "lines") %>%
-  layout(title = "Population-normalized COVID-19 cases over time", yaxis = list(title = "Cases per person"), xaxis = list(title = "Submission date"))
+  layout(title = "Figure 2a. Population-normalized COVID-19 cases over time", yaxis = list(title = "Cases per person"), xaxis = list(title = "Submission date"))
 
 deathline <- plot_ly(merge, x = ~submission_date, y = ~tot_death/state_pop, color = ~state, type = "scatter", mode = "lines") %>%
-  layout(title = "Population-normalized COVID-19 deaths over time", yaxis = list(title = "Deaths per person"), xaxis = list(title = "Submission"),hovermode = "compare")
+  layout(title = "Figure 2b. Population-normalized COVID-19 deaths over time", yaxis = list(title = "Deaths per person"), xaxis = list(title = "Submission"),hovermode = "compare")
 ```
 
-Next, we look at the Population-normalized COVID-19 deaths/cases over time.
+
+Next, we look at the Population-normalized COVID-19 deaths/cases over time (Figure 2). We are trying to see if states with higher estimated state vaccine hesitancy level would also show a stronger surge of COVID-19 cases and deaths per person (state level case number and death number divided by state population) over time. We can observe that for both Alaska and Arkansas, two state that were previously observed with higher estimated state vaccine hesitancy level among all the states within the US, shows a strong surge of cases and deaths compare to other state. However, this trend does not hold for Montana, while it only shows an average level of surge of COVID-19 cases and deaths compare to other states.
+
 
 ## {.tabset}
 
@@ -224,17 +226,21 @@ deathline
 
 ## {-}
 
-Third, we examine the relationship between total cases, total deaths, and estimated state hesitancy level.
+Third, we examine the relationship between total cases, total deaths, and with the diameter of the data point as the estimated state hesitancy level. We are expecting to see a positive correlation between total cases and total deaths (controlled for state population), which is shown in Figure 4. We are also trying to see if data points closer to the upper right hand corner (more deaths and cases per person), would also be bigger in diameter, showing correlation with vaccine hesitancy level. And that is generelly the case in Figure 4, although Alaska is interesting, with high cases per person and high estimated hesitancy level, but relatively low deaths per person. 
+
 
 ```{r, message=FALSE, echo=FALSE, warning=FALSE}
 state_mer %>% 
   plot_ly(x = ~tot_cases/state_pop, y = ~tot_death/state_pop, 
           type = 'scatter', mode = 'markers', color = ~state.y,
           size = ~state_hes, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5)) %>%
-    layout(title = "", yaxis = list(title = "Total deaths per person"), xaxis = list(title = "Total cases per person"),hovermode = "compare")
+    layout(title = "Figure 3.", yaxis = list(title = "Total deaths per person"), xaxis = list(title = "Total cases per person"),hovermode = "compare")
 ```
 
 
+# Conclusion
+
+Overall, COVID-19 vaccine hesitancy does seem to be correlated with COVID-19 cases and deaths, however, more confounding variables (etc, age, masks or population density) should be included to better understand the relationship. 
 
 
 
