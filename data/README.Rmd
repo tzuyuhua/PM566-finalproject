@@ -19,7 +19,7 @@ A total of 3 datasets will be used in this project. The first two are from US Ce
 It can be aquired through webscraping by executing the code below.
 
 
-```{r}
+```{r, eval=F, echo=T}
 library(RSocrata)
 
 read.socrata(
@@ -33,7 +33,7 @@ read.socrata(
 2. The second dataset is "United States COVID-19 Cases and Deaths by State over Time" from https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36
 It can be aquired through webscraping by executing the code below.
 
-```{r}
+```{r, eval=F, echo=T}
 read.socrata(
   "https://data.cdc.gov/resource/9mfq-cb36.json",
   app_token = "Sc1lehIxeCtFlCTmvmYgobCJD",
@@ -45,7 +45,7 @@ read.socrata(
 3. And for the comparison between states summary statistics to be reasonable and effective, I need the population data of different places. "County Population Totals: 2020-2021" from https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 A copy of this file is also located in this folder.
 
-```{r}
+```{r, eval=F, echo=T}
 read_excel("data/co-est2021-pop.xlsx", range = "A6:D3149", col_names = FALSE)
 ```
 
