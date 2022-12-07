@@ -1,6 +1,6 @@
 
 ---
-title: "PM566 Final Project: Correlation of Vaccine Hesitancy with COVID-19 Deaths and Cases"
+title: "Correlation of Vaccine Hesitancy with COVID-19 Deaths and Cases"
 author: "Tzu Yu Huang"
 output:
   pdf_document: 
@@ -10,10 +10,10 @@ output:
     toc_float: yes
 ---
 
-This is my PM566 Final Project website.
+This is my project website.
 
 You can download the pdf version here.
-https://github.com/tzuyuhua/PM566-finalproject/blob/main/index.pdf
+https://github.com/tzuyuhua/PM566-finalproject/blob/main/Final-Project.pdf
 
 <br>
 
@@ -167,7 +167,7 @@ First, we look at the distribution of estimated hesitancy level for each state. 
 
 ```{r, message=FALSE, echo=FALSE, warning=FALSE}
 # Create hover text
-state_mer$hover <- with(state_mer, paste(state.y, state, '<br>', "State level hesitancy: ", state_hes, '<br>', "Cases: ", tot_cases,'<br>', "Deaths: ", tot_death))
+state_mer$hover <- with(state_mer, paste(state.y, state, '<br>', "State level hesitancy: ", format(round(state_hes, 2), nsmall = 2), '<br>', "Cases: ", tot_cases,'<br>', "Deaths: ", tot_death))
 
 # Set up mapping details
 set_map_details <- list(
