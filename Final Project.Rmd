@@ -50,7 +50,7 @@ This report is not to discuss the cause of vaccine hesitancy or the legitimacy o
 
 A total of 3 datasets will be used in this project. The first two are from US Center for Disease Control and Prevention, and the third one are from United States Census Bureau (an official website of the United State Government).
 
-1. The fisrt dataset is “Vaccine Hesitancy for COVID-19: County and local estimates” from https://data.cdc.gov/Vaccinations/Vaccine-Hesitancy-for-COVID-19-County-and-local-es/q9mh-h2tw
+1. The fisrt dataset is “Vaccine Hesitancy for COVID-19: County and local estimates” from https://data.cdc.gov/Vaccinations/Vaccine-Hesitancy-for-COVID-19-County-and-local-es/q9mh-h2tw Read in the data using through API web scrapping.
 
 ```{r, cache=TRUE, message=FALSE, echo=FALSE, warning=FALSE}
 ori_hes <- read.socrata(
@@ -70,6 +70,7 @@ hes$county_boundary.coordinates <- NULL
 ```
 
 2. The second dataset is "United States COVID-19 Cases and Deaths by State over Time" from https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36
+Read in the data using through API web scrapping.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
 death <- read.socrata(
@@ -84,7 +85,7 @@ death <- as.data.table(death)
 ```
 
 
-3. And for the comparison between states summary statistics to be reasonable and effective, I need the population data of different places. "County Population Totals: 2020-2021" from https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
+3. And for the comparison between states summary statistics to be reasonable and effective, I need the population data of different places. "County Population Totals: 2020-2021". Downloaded from https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html
 
 
 ```{r , message=FALSE, echo=FALSE, warning=FALSE}
@@ -95,6 +96,8 @@ Variable <-c("county_name", "April2020", "Jul2020", "July2021")
 
 Description <- c("Geographic Area", "April 1, 2020 Estimates Base", "2020 Population Estimate (as of July 1)", "2021 Population Estimate (as of July 1)")
 ```
+
+No missing data in the key variables of interest are found in the datasets. After reviewing the data, there are a total number of 60 states in the COVID-19 death and cases dataset, after investigation, those state include US territory oversea such as Guam and American Samoa, for this investigation, I'll just focus on non-overseas US states. A variaty of plots are plotted to answer the reasearch question, such as scatter, line plot, and heat map.
 
 ## Estimated state vaccine hesitancy level
 
